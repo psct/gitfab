@@ -1,0 +1,118 @@
+
+version: '2'
+
+networks:
+  extern:
+
+volumes:
+  nginxproxy_certs:
+  nginxproxy_vhosts:
+  nginxproxy_html:
+  gitlab_etc:
+  gitlab_logs:
+  gitlab_data:
+  gitlabrun_etc:
+  gitlabmachine_etc:
+
+services:
+
+  nginxproxy:
+    image: jwilder/nginx-proxy
+    container_name: nginxproxy
+    hostname: nginxproxy
+    restart:
+      unless-stopped
+    networks:
+      - extern
+    volumes:
+      - nginxproxy_certs:/etc/nginx/certs:ro
+      - nginxproxy_vhosts:/etc/nginx/vhost.d
+      - nginxproxy_html:/usr/share/nginx/html
+      - /var/run/docker.sock:/tmp/docker.sock:ro
+    ports:
+      - 80:80
+      - 443:443
+    labels:
+      - com.github.jrcs.letsencrypt_nginx_proxy_companion.nginx_proxy
+
+  nginxproxy_comp:
+    image: jrcs/letsencrypt-nginx-proxy-companion
+    container_name: nginxproxy_comp
+    hostname: nginxproxy_comp
+    restart:
+      unless-stopped
+    depends_on:
+      - nginxproxy
+    networks:
+      - extern
+    volumes:
+      - nginxproxy_certs:/etc/nginx/certs
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    volumes_from:
+      - nginxproxy
+# Fuer Experimentierzertifikate
+#    environment:
+#      - ACME_CA_URI=https://acme-staging.api.letsencrypt.org/directory
+
+  gitlab:
+    image: gitlab/gitlab-ce
+    container_name: gitlab
+    hostname: gitlab.${DOMAINNAME}
+    restart:
+      unless-stopped
+    networks:
+      extern:
+        aliases:
+          - registry
+    volumes:
+      - gitlab_etc:/etc/gitlab
+      - gitlab_logs:/var/log/gitlab
+      - gitlab_data:/var/opt/gitlab
+      - /var/run/docker.sock:/var/run/docker.sock
+    environment:
+      LETSENCRYPT_HOST: gitlab.${DOMAINNAME},registry.${DOMAINNAME}
+      LETSENCRYPT_EMAIL: ${EMAILADDRESS}
+      VIRTUAL_HOST: gitlab.${DOMAINNAME},registry.${DOMAINNAME}
+      GITLAB_OMNIBUS_CONFIG: |
+         external_url 'http://gitlab.${DOMAINNAME}'
+         registry_external_url 'http://registry.${DOMAINNAME}'
+         gitlab_rails['registry_enabled']=true
+         gitlab_rails['registry_host']='registry.${DOMAINNAME}'
+#        gitlab_rails['smtp_enable']=true
+#        gitlab_rails['gitlab_email_from']='gitlab@example.com'
+#        gitlab_rails['smtp_domain']='example.com'
+#        gitlab_rails['smtp_authentication']=false
+#        gitlab_rails['smtp_address']='mail.example.com'
+
+  gitlabrun:
+    image: gitlab/gitlab-runner
+    container_name: gitlabrun
+    hostname: gitlabrun
+    restart:
+      unless-stopped
+    depends_on:
+      - gitlab
+    networks:
+      - extern
+    volumes:
+      - gitlabrun_etc:/etc/gitlab
+      - /var/run/docker.sock:/var/run/docker.sock
+    depends_on:
+      - "gitlab"
+
+  gitlabmachine:
+    image: gitlab/gitlab-runner
+    container_name: gitlabmachine
+    hostname: gitlabmachine
+    restart:
+      unless-stopped
+    depends_on:
+      - gitlab
+    networks:
+      - extern
+    volumes:
+      - gitlabmachine_etc:/etc/gitlab
+      - /var/run/docker.sock:/var/run/docker.sock
+    depends_on:
+      - "gitlab"
+

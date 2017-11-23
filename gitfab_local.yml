@@ -1,0 +1,57 @@
+
+version: '2'
+
+networks:
+  extern:
+
+volumes:
+  gitlab_etc:
+  gitlab_logs:
+  gitlab_data:
+  gitlabrun_etc:
+
+services:
+
+  gitlab:
+    image: gitlab/gitlab-ce
+    container_name: gitlab
+    hostname: gitlab
+    restart:
+      unless-stopped
+    networks:
+      extern:
+        aliases:
+          - registry
+    volumes:
+      - gitlab_etc:/etc/gitlab
+      - gitlab_logs:/var/log/gitlab
+      - gitlab_data:/var/opt/gitlab
+      - /var/run/docker.sock:/var/run/docker.sock
+    environment:
+      GITLAB_OMNIBUS_CONFIG: |
+         external_url 'http://gitlab'
+         registry_external_url 'http://registry'
+         gitlab_rails['registry_enabled']=true
+         gitlab_rails['registry_host']='registry'
+#        gitlab_rails['smtp_enable']=true
+#        gitlab_rails['gitlab_email_from']='gitlab@example.com'
+#        gitlab_rails['smtp_domain']='example.com'
+#        gitlab_rails['smtp_authentication']=false
+#        gitlab_rails['smtp_address']='mail.example.com'
+
+  gitlabrun:
+    image: gitlab/gitlab-runner
+    container_name: gitlabrun
+    hostname: gitlabrun
+    restart:
+      unless-stopped
+    depends_on:
+      - gitlab
+    networks:
+      - extern
+    volumes:
+      - gitlabrun_etc:/etc/gitlab
+      - /var/run/docker.sock:/var/run/docker.sock
+    depends_on:
+      - "gitlab"
+
