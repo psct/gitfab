@@ -1,7 +1,7 @@
 ## Hinweise zum empfohlenen Betrieb
 
 Das ist ein simples Beispielprojekt zu einem Artikel [aus c't
-25/2017](https://www.heise.de/ct/ausgabe/2017-25-GitLab-CI-CD-Mietserver-bauen-Software-3894125.html). Es erstellt mittels Docker einen GitLab-Server inklusive CI/CD. 
+25/2017](https://www.heise.de/ct/ausgabe/2017-25-GitLab-CI-CD-Mietserver-bauen-Software-3894126.html). Es erstellt mittels Docker einen GitLab-Server inklusive CI/CD. 
 
 Um das Beispiel nachbauen zu können, benötigen Sie eine eigene Domain, um
 zwei Hostnamen mit den erstellten Containern zu verbinden. [Teile lassen sich
