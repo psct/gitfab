@@ -1,5 +1,5 @@
 
-version: '2'
+version: '3'
 
 networks:
   extern:
@@ -48,8 +48,8 @@ services:
     volumes:
       - nginxproxy_certs:/etc/nginx/certs
       - /var/run/docker.sock:/var/run/docker.sock:ro
-    volumes_from:
-      - nginxproxy
+      - nginxproxy_vhosts:/etc/nginx/vhost.d
+      - nginxproxy_html:/usr/share/nginx/html
 # Fuer Experimentierzertifikate
 #    environment:
 #      - ACME_CA_URI=https://acme-staging.api.letsencrypt.org/directory
