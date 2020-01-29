@@ -29,6 +29,7 @@ services:
       - nginxproxy_vhosts:/etc/nginx/vhost.d
       - nginxproxy_html:/usr/share/nginx/html
       - /var/run/docker.sock:/tmp/docker.sock:ro
+      - ./client_max_body_size.conf:/etc/nginx/conf.d/client_max_body_size.conf
     ports:
       - 80:80
       - 443:443
